@@ -1,11 +1,3 @@
-# # # # # # # # # # # # # # # # # # # # # # # # # # #
-#                                                   #
-#   Name: Prakash bhatiya                           #
-#   Date: 24/05/2023                                #
-#   Desc: Scraping Costco Details                   #
-#   Email: bhatiyaprakash991@gmail.com              #
-#                                                   #
-# # # # # # # # # # # # # # # # # # # # # # # # # # #
 " This module for scrape detail from costco"
 from utils import save_response
 from playwright.sync_api import sync_playwright
@@ -14,19 +6,6 @@ from bs4 import BeautifulSoup as bs
 
 class Costco:
     "class for costco"
-
-    # >> just for decoration
-    def intro(self):
-      print()
-      print('  # # # # # # # # # # # # #  # # # # # # # #')
-      print('  #                                        #')
-      print('  #     SCRAPER FOR Costco Products        #')
-      print('  #           By: PRAKASH BHATIYA          #')
-      print('  #             Dt: 24-05-2023             #')
-      print('  #      bhatiyaprakash991@gmail.com       #')
-      print('  #                                        #')
-      print('  # # # # # # # # # # # # #  # # # # # # # #')
-      print()
 
     def get_headers(self):
         """header
@@ -53,7 +32,7 @@ class Costco:
         soup = bs(cat_text, 'html')
         category = self.get_categories(soup)
         save_response(category, "categories.json", "Data/costco/")
-        browser.close()
+        page.close()
         return
 
     def get_categories(self, soup: str, parent_data_id=1, current_level=0) -> list:
@@ -86,7 +65,6 @@ class Costco:
             cat_url = cat.a.get('href')
             category_dict['category'] = title
             category_dict['url'] = cat_url
-            # >> Here use recursive Method to get Categories
             category_dict['subcategory'] = self.get_categories(soup, parent_data_id=data_id, current_level=current_level)
             temp_cat.append(category_dict)
 
@@ -159,7 +137,7 @@ class Costco:
         Returns:
             list: list of dictionary
         """
-
+        
         try:
             browser = p.chromium.launch(headless=False)
             context = browser.new_context()
@@ -225,9 +203,9 @@ class Costco:
             reviews = []
             try:
                 profile = page.query_selector_all("xpath=//button[contains(@class, 'bv-avatar-popup-target bv-focusable')]//span")
-                # if not profile:
-                #     browser.close()
-                #     return []
+                if not profile:
+                    browser.close()
+                    return []
             except Exception:
                 profile = None
             try:
@@ -279,16 +257,10 @@ class Costco:
                 "reviews": reviews,
                 "helpfuls": helpfuls,
             }
-            product_details_list.append(product_dict)
-
-             # >> Is_disabled for get last page no
-            # try:
-            #     is_disabled = page.query_selector("xpath=//button[contains(@class, 'bv-content-btn bv-content-btn-pages bv-content-btn-pages-last bv-focusable bv-content-btn-pages-inactive')]").inner_html()
-            #     if "bv-content-btn-pages-active" in is_disabled:
-            #         is_disabled.click()
-            #         continue
-            # except Exception as e:
-            #     continue
+            product_details_list.append(product_dict)            is_disabled = page.query_selector("xpath=//button[contains(@class, 'bv-content-btn bv-content-btn-pages bv-content-btn-pages-last bv-focusable bv-content-btn-pages-inactive')]").inner_html()
+            if "bv-content-btn-pages-active" in is_disabled:
+                is_disabled.click()
+                continue
             browser.close()
             return product_details_list
 
@@ -308,14 +280,12 @@ class Costco:
                     y['product_urls'] = urls
                     y['details'] = []
                     for url in urls:
-                        # >> Passed Url to get product details here
                         y['details'].append(self.get_product_details(url))
                         save_response(categories, "categories.json", "Data/costco/")
 
 if __name__ == '__main__':
-    """ Main Block """
     costco = Costco()
+    # costco.get_categories()
     with sync_playwright() as p:
-        costco.intro()
-        costco.get_homepage()
+        # costco.get_homepage()
         costco.get_category_tree()
